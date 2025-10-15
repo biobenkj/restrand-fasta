@@ -1,0 +1,20 @@
+# .cargo/config.toml
+
+[env]
+# Ensure env RUSTFLAGS doesn't leak; config rustflags below still apply.
+# (Optional—also clearing in Makefile)
+RUSTFLAGS = ""
+
+[target.aarch64-apple-darwin]
+# Apple Silicon build: optimize for M2 (fine on M1/M3 too).
+rustflags = [
+  "-C", "target-cpu=apple-m2",
+  "-C", "link-arg=-Wl,-dead_strip"
+]
+
+[target.x86_64-apple-darwin]
+# Intel build: Haswell is a good baseline for modern Macs; use "x86-64" for max compatibility.
+rustflags = [
+  "-C", "target-cpu=x86-64",
+  "-C", "link-arg=-Wl,-dead_strip"
+]

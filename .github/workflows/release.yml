@@ -1,0 +1,66 @@
+name: Release
+on:
+  push:
+    tags: ["v*.*.*"]
+
+permissions:
+  contents: write
+
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        target: [x86_64-unknown-linux-gnu, aarch64-unknown-linux-gnu]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - run: rustup target add ${{ matrix.target }}
+      - name: Build
+        run: cargo build --release --target ${{ matrix.target }}
+      - name: Package
+        run: |
+          BIN=restrand-fasta
+          OUT=${BIN}-${{ matrix.target }}
+          mkdir -p dist
+          cp target/${{ matrix.target }}/release/${BIN} dist/${OUT}
+          (cd dist && sha256sum ${OUT} > ${OUT}.sha256)
+      - name: Upload assets
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/restrand-fasta-${{ matrix.target }}
+            dist/restrand-fasta-${{ matrix.target }}.sha256
+
+  macos-universal:
+    runs-on: macos-latest
+    env:
+      MACOSX_DEPLOYMENT_TARGET: 11.0
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: Add targets
+        run: |
+          rustup target add aarch64-apple-darwin
+          rustup target add x86_64-apple-darwin
+      - name: Build both arches
+        run: |
+          cargo build --release --target aarch64-apple-darwin
+          cargo build --release --target x86_64-apple-darwin
+      - name: Create universal2 binary
+        run: |
+          BIN=restrand-fasta
+          mkdir -p dist
+          lipo -create \
+            -output dist/${BIN}-universal-apple-darwin \
+            target/aarch64-apple-darwin/release/${BIN} \
+            target/x86_64-apple-darwin/release/${BIN}
+          (cd dist && shasum -a 256 ${BIN}-universal-apple-darwin > ${BIN}-universal-apple-darwin.sha256)
+      - name: Upload assets
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/restrand-fasta-universal-apple-darwin
+            dist/restrand-fasta-universal-apple-darwin.sha256

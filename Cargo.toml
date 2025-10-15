@@ -1,0 +1,31 @@
+[package]
+name = "restrand-fasta"
+version = "0.3.0"
+edition = "2021"
+description = "Re-orient ONT reads based on molecule architecture table"
+repository = "https://github.com/biobenkj/restrand-fasta"
+homepage = "https://github.com/biobenkj/restrand-fasta"
+readme = "README.md"
+license = "MIT OR Apache-2.0"
+keywords = ["bioinformatics", "fasta", "cli"]
+categories = ["command-line-utilities", "science"]
+rust-version = "1.74"
+
+[dependencies]
+clap = { version = "4.5", features = ["derive"] }
+csv = "1.3"
+anyhow = "1.0"
+flate2 = "1.0"
+bio = "1"
+
+[dev-dependencies]
+assert_cmd = "2.0"
+predicates = "3"
+tempfile = "3.10"
+flate2 = "1.0"
+bio = "1.6"
+
+[profile.release]
+lto = "thin"
+codegen-units = 1
+strip = "symbols"
