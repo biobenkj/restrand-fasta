@@ -87,7 +87,7 @@ When a read has `orientation:-`:
 
 ## MSRV
 
-- Minimum Supported Rust Version: **1.74**
+- Minimum Supported Rust Version: **1.82**
 
 ## License
 
