@@ -2,7 +2,7 @@ use assert_cmd::Command;
 use predicates::prelude::*;
 use std::fs::{self, File};
 use std::io::Write;
-use std::path::Path; // wrapper providing write_stdin()
+use std::path::Path;
 
 use flate2::write::GzEncoder;
 use flate2::Compression;
@@ -64,7 +64,7 @@ fn keeps_plus_flips_minus_with_suffix_and_wrap() {
     .unwrap();
 
     // target + ; readB is '-' so it should flip and get suffix
-    let mut cmd = Command::cargo_bin("restrand-fasta").unwrap();
+    let mut cmd = Command::new(assert_cmd::cargo::cargo_bin!("restrand-fasta"));
     let out = run_ok(cmd.args([
         "-f",
         fasta_p.to_str().unwrap(),
@@ -109,7 +109,7 @@ fn drop_missing_false_passes_through() {
     // Only map readA; readB missing
     write(&tsv_p, "ReadName\torientation\nreadA\t+\n");
 
-    let mut cmd = Command::cargo_bin("restrand-fasta").unwrap();
+    let mut cmd = Command::new(assert_cmd::cargo::cargo_bin!("restrand-fasta"));
     let out = run_ok(cmd.args([
         "-f",
         fasta_p.to_str().unwrap(),
@@ -131,7 +131,7 @@ fn drop_missing_true_drops() {
     // Only map readA; readB missing
     write(&tsv_p, "ReadName\torientation\nreadA\t+\n");
 
-    let mut cmd = Command::cargo_bin("restrand-fasta").unwrap();
+    let mut cmd = Command::new(assert_cmd::cargo::cargo_bin!("restrand-fasta"));
     let out = run_ok(cmd.args([
         "-f",
         fasta_p.to_str().unwrap(),
@@ -154,7 +154,7 @@ fn gz_fasta_and_gz_table_work() {
     write_gz(&fasta_gz, FASTA);
     write_gz(&tsv_gz, TSV);
 
-    let mut cmd = Command::cargo_bin("restrand-fasta").unwrap();
+    let mut cmd = Command::new(assert_cmd::cargo::cargo_bin!("restrand-fasta"));
     let out = run_ok(cmd.args([
         "-f",
         fasta_gz.to_str().unwrap(),
@@ -173,7 +173,7 @@ fn stdin_stdout_mode() {
     write(&tsv_p, TSV);
 
     // feed FASTA on stdin
-    let mut cmd = Command::cargo_bin("restrand-fasta").unwrap();
+    let mut cmd = Command::new(assert_cmd::cargo::cargo_bin!("restrand-fasta"));
     cmd.args(["-f", "-", "-t", tsv_p.to_str().unwrap()]);
     cmd.write_stdin(FASTA);
 
@@ -190,7 +190,7 @@ fn bad_orientation_errors() {
     write(&fasta_p, FASTA);
     write(&tsv_p, BAD_TSV);
 
-    let mut cmd = Command::cargo_bin("restrand-fasta").unwrap();
+    let mut cmd = Command::new(assert_cmd::cargo::cargo_bin!("restrand-fasta"));
     cmd.args([
         "-f",
         fasta_p.to_str().unwrap(),
