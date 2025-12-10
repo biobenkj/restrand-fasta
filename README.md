@@ -5,7 +5,11 @@
 
 ### Re-orient ONT reads based on molecule architecture table
 
-`restrand-fasta` flips FASTA sequences to a constant molecular orientation using a TSV with `ReadName` and `orientation` (`+` = cDNA, `-` = rc(cDNA)). Output FASTA is always wrapped to 60 characters as a common convention/compatibility.
+`restrand-fasta` flips FASTA or FASTQ sequences to a constant molecular orientation using either:
+- **FASTA mode**: A TSV with `ReadName` and `orientation` (`+` = cDNA, `-` = rc(cDNA))
+- **FASTQ mode**: Embedded orientation tags in FASTQ headers (e.g., `orientation:+` or `orientation:-`)
+
+Output FASTA is always wrapped to 60 characters. FASTQ output preserves the 4-line format with reverse-complemented sequences and reversed quality scores.
 
 ## Install
 
@@ -19,7 +23,9 @@ Grab macOS (universal) and Linux builds from [Releases](https://github.com/biobe
 
 ## Usage
 
-```
+### FASTA mode (with TSV table)
+
+```bash
 restrand-fasta \
   -f reads.fa.gz \
   -t annotations.tsv \
@@ -28,13 +34,29 @@ restrand-fasta \
   > reoriented.fa
 ```
 
-- Input FASTA can be gzipped; TSV can be gzipped.  
-- Reads absent from the table pass through unchanged; add `--drop-missing` to drop them.  
+- Input FASTA can be gzipped; TSV can be gzipped.
+- Reads absent from the table pass through unchanged; add `--drop-missing` to drop them.
 - Header is preserved; if flipped, optional suffix is appended.
 
-## TSV columns expected
+### FASTQ mode (with embedded orientation tags)
 
-- `ReadName` (string, must match FASTA IDs)  
+```bash
+restrand-fasta \
+  --fastq \
+  -f reads.fq.gz \
+  --target-orientation + \
+  > reoriented.fq
+```
+
+- Use `--fastq` flag to enable FASTQ mode (no TSV table required)
+- Looks for `orientation:+` or `orientation:-` in FASTQ headers
+- Reads with `orientation:-` are reverse-complemented and quality scores are reversed
+- Headers are updated from `orientation:-` to `orientation:+`
+- Reads without orientation tags pass through unchanged
+
+## TSV columns expected (FASTA mode only)
+
+- `ReadName` (string, must match FASTA IDs)
 - `orientation` (`+` for cDNA, `-` for rc(cDNA); also accepts `plus/fwd/1` and `minus/rev/0/rc`)
 
 ### Example TSV
@@ -45,6 +67,23 @@ ReadName	orientation
 ea1e3068-7185-4dea-8473-b5e1c3624b19	+
 eab28f58-f4db-463f-a4a9-4d2c354ea54f	-
 ```
+
+## FASTQ header format (FASTQ mode)
+
+The tool looks for `orientation:+` or `orientation:-` anywhere in the FASTQ header line:
+
+### Example FASTQ headers
+
+```
+@read_id cell_id:10|Barcodes:i7:CATCTCGG|UMI:AGGC|orientation:+
+@6d2c78e5-674c cell_id:10|UMI:AGGC|orientation:-
+@simple_read orientation:+
+```
+
+When a read has `orientation:-`:
+- The sequence is reverse complemented
+- The quality scores are reversed to match
+- The header is updated to show `orientation:+`
 
 ## MSRV
 
