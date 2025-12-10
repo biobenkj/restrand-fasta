@@ -16,14 +16,14 @@ clap = { version = "4.5", features = ["derive"] }
 csv = "1.3"
 anyhow = "1.0"
 flate2 = "1.0"
-bio = "1"
+bio = "3"
 
 [dev-dependencies]
 assert_cmd = "2.0"
 predicates = "3"
 tempfile = "3.10"
 flate2 = "1.0"
-bio = "1.6"
+bio = "3.0"
 
 [profile.release]
 lto = "thin"
