@@ -1,8 +1,8 @@
+use assert_cmd::Command;
 use predicates::prelude::*;
 use std::fs::{self, File};
 use std::io::Write;
-use std::path::Path;
-use assert_cmd::Command; // wrapper providing write_stdin()
+use std::path::Path; // wrapper providing write_stdin()
 
 use flate2::write::GzEncoder;
 use flate2::Compression;
@@ -57,18 +57,24 @@ fn keeps_plus_flips_minus_with_suffix_and_wrap() {
 
     // Use a long sequence to test 60-col wrapping
     let long_seq = "A".repeat(130);
-    fs::write(&fasta_p, format!(">readA some desc\n{}\n>readB\n{}\n", long_seq, long_seq)).unwrap();
+    fs::write(
+        &fasta_p,
+        format!(">readA some desc\n{}\n>readB\n{}\n", long_seq, long_seq),
+    )
+    .unwrap();
 
     // target + ; readB is '-' so it should flip and get suffix
     let mut cmd = Command::cargo_bin("restrand-fasta").unwrap();
-    let out = run_ok(
-        cmd.args([
-            "-f", fasta_p.to_str().unwrap(),
-            "-t", tsv_p.to_str().unwrap(),
-            "--target-orientation", "+",
-            "--flipped-suffix", "/rc",
-        ])
-    );
+    let out = run_ok(cmd.args([
+        "-f",
+        fasta_p.to_str().unwrap(),
+        "-t",
+        tsv_p.to_str().unwrap(),
+        "--target-orientation",
+        "+",
+        "--flipped-suffix",
+        "/rc",
+    ]));
 
     // Record 1 header preserved (not flipped)
     assert!(out.lines().next().unwrap().starts_with(">readA some desc"));
@@ -86,7 +92,7 @@ fn keeps_plus_flips_minus_with_suffix_and_wrap() {
 
     // Record 2 sequence is reverse-complement of long_seq
     let expected_rc = dna::revcomp(long_seq.as_bytes());
-    let rec2_seq: String = lines[(rec2_header_idx+1)..]
+    let rec2_seq: String = lines[(rec2_header_idx + 1)..]
         .iter()
         .take_while(|l| !l.starts_with('>'))
         .copied()
@@ -104,10 +110,12 @@ fn drop_missing_false_passes_through() {
     write(&tsv_p, "ReadName\torientation\nreadA\t+\n");
 
     let mut cmd = Command::cargo_bin("restrand-fasta").unwrap();
-    let out = run_ok(
-        cmd.args(["-f", fasta_p.to_str().unwrap(),
-                  "-t", tsv_p.to_str().unwrap()])
-    );
+    let out = run_ok(cmd.args([
+        "-f",
+        fasta_p.to_str().unwrap(),
+        "-t",
+        tsv_p.to_str().unwrap(),
+    ]));
 
     // Both records should be present (readB passed through)
     assert!(out.contains(">readA some desc"));
@@ -124,11 +132,13 @@ fn drop_missing_true_drops() {
     write(&tsv_p, "ReadName\torientation\nreadA\t+\n");
 
     let mut cmd = Command::cargo_bin("restrand-fasta").unwrap();
-    let out = run_ok(
-        cmd.args(["-f", fasta_p.to_str().unwrap(),
-                  "-t", tsv_p.to_str().unwrap(),
-                  "--drop-missing"])
-    );
+    let out = run_ok(cmd.args([
+        "-f",
+        fasta_p.to_str().unwrap(),
+        "-t",
+        tsv_p.to_str().unwrap(),
+        "--drop-missing",
+    ]));
 
     // readB should be gone
     assert!(out.contains(">readA some desc"));
@@ -145,10 +155,12 @@ fn gz_fasta_and_gz_table_work() {
     write_gz(&tsv_gz, TSV);
 
     let mut cmd = Command::cargo_bin("restrand-fasta").unwrap();
-    let out = run_ok(
-        cmd.args(["-f", fasta_gz.to_str().unwrap(),
-                  "-t", tsv_gz.to_str().unwrap()])
-    );
+    let out = run_ok(cmd.args([
+        "-f",
+        fasta_gz.to_str().unwrap(),
+        "-t",
+        tsv_gz.to_str().unwrap(),
+    ]));
     // basic sanity: both headers present
     assert!(out.contains(">readA some desc"));
     assert!(out.contains(">readB"));
@@ -179,8 +191,12 @@ fn bad_orientation_errors() {
     write(&tsv_p, BAD_TSV);
 
     let mut cmd = Command::cargo_bin("restrand-fasta").unwrap();
-    cmd.args(["-f", fasta_p.to_str().unwrap(),
-              "-t", tsv_p.to_str().unwrap()]);
+    cmd.args([
+        "-f",
+        fasta_p.to_str().unwrap(),
+        "-t",
+        tsv_p.to_str().unwrap(),
+    ]);
     cmd.assert()
         .failure()
         .stderr(predicate::str::contains("Unrecognized orientation value"));

@@ -75,7 +75,11 @@ fn open_text(path: &str) -> Result<Box<dyn Read>> {
     }
 }
 
-fn load_orientation_map(table_path: &PathBuf, id_col: &str, orientation_col: &str) -> Result<HashMap<String, u8>> {
+fn load_orientation_map(
+    table_path: &PathBuf,
+    id_col: &str,
+    orientation_col: &str,
+) -> Result<HashMap<String, u8>> {
     // Support gz TSV by looking at extension.
     let rdr: Box<dyn Read> = if table_path.to_string_lossy().ends_with(".gz") {
         Box::new(MultiGzDecoder::new(
@@ -115,7 +119,11 @@ fn load_orientation_map(table_path: &PathBuf, id_col: &str, orientation_col: &st
                     let s = String::from_utf8_lossy(ori_field).to_ascii_lowercase();
                     if s.starts_with("plus") || s.starts_with("fwd") || s == "1" {
                         b'+'
-                    } else if s.starts_with("minus") || s.starts_with("rev") || s == "0" || s == "rc" {
+                    } else if s.starts_with("minus")
+                        || s.starts_with("rev")
+                        || s == "0"
+                        || s == "rc"
+                    {
                         b'-'
                     } else {
                         bail!("Unrecognized orientation value '{}' for read '{}'", s, id);
@@ -241,7 +249,9 @@ fn main() -> Result<()> {
     }
 
     // FASTA mode requires a table
-    let table = cli.table.as_ref()
+    let table = cli
+        .table
+        .as_ref()
         .context("--table is required for FASTA mode (or use --fastq for FASTQ mode)")?;
 
     let ori_map = load_orientation_map(table, &cli.id_col, &cli.orientation_col)
@@ -271,7 +281,11 @@ fn main() -> Result<()> {
         // Decide action
         let action = match ori_map.get(&id) {
             Some(&ori) => {
-                if ori == target { "keep" } else { "flip" }
+                if ori == target {
+                    "keep"
+                } else {
+                    "flip"
+                }
             }
             None => {
                 if cli.drop_missing {
